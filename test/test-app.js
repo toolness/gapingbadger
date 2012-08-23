@@ -7,6 +7,19 @@ expect(app.makeSalt()).to.be.a('string');
 app.makeSalt = function() { return "hashbrowns"; };
 
 
+describe("FileTokenStorage.createToken", function() {
+  it("should work", function(done) {
+    app.fileTokenStorage.createToken({'meh': 1}, function(err, token) {
+      expect(err).to.be(null);
+      app.fileTokenStorage.getTokenInfo(token, function(err, info) {
+        expect(err).to.be(null);
+        expect(info).to.eql({'meh': 1});
+        app.fileTokenStorage.deleteToken(token);
+        done();
+      });
+    });
+  });
+});
 
 describe("getLatestAssertionId", function() {
   it("should return 0 if no files are present", function() {
@@ -26,16 +39,16 @@ describe("server", function() {
   beforeEach(function() {
     app.deleteUser('foo@foo.org');
     app.deleteUser('otherperson@foo.org');
+    app.browserIDCORS.tokenStorage.setTestingToken('abcd', {
+      email: 'foo@foo.org',
+      origin: 'http://bar.org'
+    });
   });
 
   afterEach(function() {
     app.deleteUser('foo@foo.org');
     app.deleteUser('otherperson@foo.org');
-  });
-  
-  app.browserIDCORS.tokenStorage.setTestingToken('abcd', {
-    email: 'foo@foo.org',
-    origin: 'http://bar.org'
+    app.browserIDCORS.tokenStorage.deleteToken('abcd');
   });
 
   it('should reject GET /badges when unauthenticated', function(done) {

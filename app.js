@@ -1,14 +1,30 @@
 var fs = require('fs'),
     crypto = require('crypto'),
     express = require('express'),
-    bic = require('browserid-cors')(),
+    FileTokenStorage = require('./file-token-storage'),
+    BrowserIDCORS = require('browserid-cors'),
     app = express.createServer();
 
 var DATA_DIR = __dirname + '/data',
     ASSERTIONS_DIR = DATA_DIR + '/assertions',
     USERS_DIR = DATA_DIR + '/users',
     BLOBS_DIR = DATA_DIR + '/blobs',
+    SESSIONS_DIR = DATA_DIR + '/sessions',
     PORT = 3031;
+
+[DATA_DIR, ASSERTIONS_DIR, USERS_DIR, BLOBS_DIR,
+ SESSIONS_DIR].forEach(function(dirname) {
+  if (!fs.existsSync(dirname)) {
+    console.log("creating " + dirname);
+    fs.mkdirSync(dirname);
+  }
+});
+
+app.fileTokenStorage = FileTokenStorage({dir: SESSIONS_DIR});
+
+var bic = app.browserIDCORS = BrowserIDCORS({
+  tokenStorage: app.fileTokenStorage
+});
 
 var assertionFilename = app.assertionFilename = function(id) {
   return ASSERTIONS_DIR + '/' + id + '.json';
@@ -97,15 +113,6 @@ app.addAssertionForUser = function(email, assertion) {
   return newId;
 };
 
-[DATA_DIR, ASSERTIONS_DIR, USERS_DIR, BLOBS_DIR].forEach(function(dirname) {
-  if (!fs.existsSync(dirname)) {
-    console.log("creating " + dirname);
-    fs.mkdirSync(dirname);
-  }
-});
-
-
-app.browserIDCORS = bic;
 app.nextId = app.getLatestAssertionId(fs.readdirSync(ASSERTIONS_DIR)) + 1;
 
 if (!module.parent)
