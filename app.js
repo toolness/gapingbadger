@@ -1,4 +1,5 @@
 var fs = require('fs'),
+    crypto = require('crypto'),
     express = require('express'),
     bic = require('browserid-cors')(),
     app = express.createServer();
@@ -33,6 +34,10 @@ function idIsValid(req, res, next) {
   req.params.id = id;
   next();
 }
+
+app.makeSalt = function() {
+  return Math.random().toString();
+};
 
 app.getLatestAssertionId = function(files) {
   var maxNum = 0;
@@ -119,8 +124,20 @@ app.del('/badges/:id', bic.requireAccessToken, idIsValid, function(req, res) {
 });
 
 app.post('/badges', bic.requireAccessToken, function(req, res) {
-  var id = app.addAssertionForUser(req.user.email, req.body);
-  return res.send({id: id});
+  if (typeof(req.body) != "object")
+    return res.send(400);
+
+  var assertion = req.body;
+  var salt = app.makeSalt();
+  var sha256 = crypto.createHash('sha256');
+
+  sha256.update(req.user.email + salt, 'utf8');
+  assertion.recipient = "sha256$" + sha256.digest('hex');
+  assertion.salt = salt;
+  
+  var id = app.addAssertionForUser(req.user.email, assertion);
+  assertion.id = id;
+  return res.send(assertion);
 });
 
 module.exports = app;

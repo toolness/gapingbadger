@@ -3,6 +3,11 @@ var expect = require('expect.js'),
     fs = require('fs'),
     app = require('../app');
 
+expect(app.makeSalt()).to.be.a('string');
+app.makeSalt = function() { return "hashbrowns"; };
+
+
+
 describe("getLatestAssertionId", function() {
   it("should return 0 if no files are present", function() {
     expect(app.getLatestAssertionId([])).to.be(0);
@@ -121,11 +126,15 @@ describe("server", function() {
       .expect(200, function(err, res) {
         if (err) return done(err);
         var id = res.body.id;
-        expect(app.getAssertionIdsForUser('foo@foo.org')).to.eql([id]);
-        expect(app.readJSON(app.assertionFilename(id))).to.eql({
+        var assertion = {
           id: id,
-          foo: 'bar'
-        });
+          foo: 'bar',
+          recipient: 'sha256$d2da00bcb0b8ff88cbcd5568ad67499a1ac83a8a82036344c3b92a08f661f877',
+          salt: "hashbrowns"
+        };
+        expect(res.body).to.eql(assertion);
+        expect(app.getAssertionIdsForUser('foo@foo.org')).to.eql([id]);
+        expect(app.readJSON(app.assertionFilename(id))).to.eql(assertion);
         expect(app.nextId).to.be(id + 1);
         done();
       });
