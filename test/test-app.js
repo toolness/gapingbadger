@@ -139,4 +139,40 @@ describe("server", function() {
         done();
       });
   });
+  
+  it('should reject GET /blob when unauthenticated', function(done) {
+    request(app)
+      .get('/blob')
+      .expect(403, done);
+  });
+
+  it('should accept GET /blob', function(done) {
+    app.setBlobForUser('foo@foo.org', {hi: 'there'});
+    request(app)
+      .get('/blob')
+      .set('X-Access-Token', 'abcd')
+      .expect(200, {
+        hi: 'there'
+      }, done);
+  });
+
+  it('should reject PUT /blob when unauthenticated', function(done) {
+    request(app)
+      .put('/blob')
+      .expect(403, done);
+  });
+
+  it('should accept PUT /blob', function(done) {
+    request(app)
+      .put('/blob')
+      .set('X-Access-Token', 'abcd')
+      .send({
+        bleh: 'narg'
+      })
+      .expect(204, function(err) {
+        if (err) return done(err);
+        expect(app.getBlobForUser('foo@foo.org')).to.eql({bleh: 'narg'});
+        done();
+      });
+  });
 });

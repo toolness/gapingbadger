@@ -7,6 +7,7 @@ var fs = require('fs'),
 var DATA_DIR = __dirname + '/data',
     ASSERTIONS_DIR = DATA_DIR + '/assertions',
     USERS_DIR = DATA_DIR + '/users',
+    BLOBS_DIR = DATA_DIR + '/blobs',
     PORT = 3031;
 
 var assertionFilename = app.assertionFilename = function(id) {
@@ -15,6 +16,10 @@ var assertionFilename = app.assertionFilename = function(id) {
 
 function userFilename(email) {
   return USERS_DIR + '/' + email;
+}
+
+function blobFilename(email) {
+  return BLOBS_DIR + '/' + email;
 }
 
 function writeJSON(filename, obj) {
@@ -63,11 +68,23 @@ app.getAssertionIdsForUser = function(email) {
   return readJSON(filename);
 };
 
+app.setBlobForUser = function(email, blob) {
+  writeJSON(blobFilename(email), blob);
+};
+
+app.getBlobForUser = function(email) {
+  var filename = blobFilename(email);
+  if (!fs.existsSync(filename))
+    return {};
+  return readJSON(filename);
+};
+
 app.deleteUser = function(email) {
   app.getAssertionIdsForUser(email).forEach(function(id) {
     fs.unlinkSync(assertionFilename(id));
   });
   app.setAssertionIdsForUser(email, []);
+  app.setBlobForUser(email, {});
 };
 
 app.addAssertionForUser = function(email, assertion) {
@@ -80,7 +97,7 @@ app.addAssertionForUser = function(email, assertion) {
   return newId;
 };
 
-[DATA_DIR, ASSERTIONS_DIR, USERS_DIR].forEach(function(dirname) {
+[DATA_DIR, ASSERTIONS_DIR, USERS_DIR, BLOBS_DIR].forEach(function(dirname) {
   if (!fs.existsSync(dirname)) {
     console.log("creating " + dirname);
     fs.mkdirSync(dirname);
@@ -106,6 +123,17 @@ app.get('/badges', bic.requireAccessToken, function(req, res) {
   res.send(ids.map(function(id) {
     return readJSON(assertionFilename(id));
   }));
+});
+
+app.get('/blob', bic.requireAccessToken, function(req, res) {
+  res.send(app.getBlobForUser(req.user.email));
+});
+
+app.put('/blob', bic.requireAccessToken, function(req, res) {
+  if (typeof(req.body) != 'object')
+    return res.send(400);
+  app.setBlobForUser(req.user.email, req.body);
+  res.send();
 });
 
 app.get('/badges/:id', idIsValid, function(req, res) {
