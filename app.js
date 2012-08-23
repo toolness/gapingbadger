@@ -6,7 +6,7 @@ var fs = require('fs'),
 var DATA_DIR = __dirname + '/data',
     ASSERTIONS_DIR = DATA_DIR + '/assertions',
     USERS_DIR = DATA_DIR + '/users',
-    PORT = 3000;
+    PORT = 3031;
 
 var assertionFilename = app.assertionFilename = function(id) {
   return ASSERTIONS_DIR + '/' + id + '.json';
@@ -75,8 +75,6 @@ app.addAssertionForUser = function(email, assertion) {
   return newId;
 };
 
-app.browserIDCORS = bic;
-
 [DATA_DIR, ASSERTIONS_DIR, USERS_DIR].forEach(function(dirname) {
   if (!fs.existsSync(dirname)) {
     console.log("creating " + dirname);
@@ -84,7 +82,12 @@ app.browserIDCORS = bic;
   }
 });
 
+
+app.browserIDCORS = bic;
 app.nextId = app.getLatestAssertionId(fs.readdirSync(ASSERTIONS_DIR)) + 1;
+
+if (!module.parent)
+  app.use(express.logger());
 
 app.use(express.limit(1024 * 50));
 app.use(express.bodyParser());
