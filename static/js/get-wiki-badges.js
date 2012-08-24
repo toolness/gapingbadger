@@ -7,6 +7,7 @@ define(["jquery"], function($) {
     var baseWikiURL = options.wikiURL || 'https://wiki.mozilla.org';
     var baseWikiProxyURL = options.wikiProxyURL ||
                            'http://labs.toolness.com:8291';
+    var deferred = $.Deferred();
     
     jQuery.get(baseWikiProxyURL + wikiPath, function(html) {
       var badges = {};
@@ -28,7 +29,10 @@ define(["jquery"], function($) {
           criteria: criteriaURL
         };
       });
-      cb(badges);
+      deferred.resolve(badges);
+      if (cb)
+        cb(badges);
     });
+    return deferred;
   };
 });

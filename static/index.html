@@ -12,9 +12,7 @@ require([
   "gapingbadger",
   "get-wiki-badges"
 ], function($, Gapingbadger, getWikiBadges) {
-  getWikiBadges('/Webmakers/SampleBadges', function(badges) {
-    console.log(badges);
-  });
+  var wikiBadges = getWikiBadges('/Webmakers/SampleBadges');
   badger = Gapingbadger("http://labs.toolness.com:3031");
   badger.checkLogin({
     success: function() {
@@ -30,6 +28,9 @@ require([
     }
   });
   badger.on('fetch', function() {
+    wikiBadges.done(function(badges) {
+      console.log(badges);
+    });
     console.log('fetch');
   });
 });
