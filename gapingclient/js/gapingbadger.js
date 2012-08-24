@@ -1,5 +1,5 @@
 define(function(require) {
-  var MicroEvent = require("micro-event"),
+  var BackboneEvents = require("backbone-events"),
       BrowserIDCORS = require("gb/browserid-cors"),
       Badges = require("gb/badges"),
       checkLogin = require("gb/check-login"),
@@ -150,7 +150,7 @@ define(function(require) {
       });
     };
     
-    MicroEvent.mixin(self);
+    BackboneEvents.mixin(self);
     return self;
   };
 });
