@@ -1,30 +1,23 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Gapingbadger Client</title>
+<link rel="stylesheet" href="css/badge.css">
+<link rel="stylesheet" href="css/achievement.css">
+<link rel="stylesheet" href="css/media-object.css">
 <style>
+body {
+  width: 640px;
+  margin: 0 auto;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+}
+
 html:not(.logged-out) .logged-out {
   display: none;
 }
 
 html:not(.logged-in) .logged-in {
   display: none;
-}
-
-ul.badges {
-  list-style-type: none;
-}
-
-/* ====== media ====== 
- * From http://www.stubbornella.org/?p=497 */
-
-.media {margin:10px;}
-.media, .bd {overflow:hidden; _overflow:visible; zoom:1;}
-.media .img {float:left; margin-right: 10px;}
-.media .img img{display:block;}
-.media .imgExt{float:right; margin-left: 10px;}
-
-.media .img.badge {
-  width: 66px;
 }
 </style>
 <h1>Gapingbadger Client</h1>
@@ -51,8 +44,10 @@ require([
   "gapingbadger",
   "get-wiki-badges",
   "Mustache",
-  "text!templates/badge.html"
-], function($, Gapingbadger, getWikiBadges, Mustache, badgeHTML) {
+  "text!templates/badge.html",
+  "text!templates/achievement.html"
+], function($, Gapingbadger, getWikiBadges, Mustache, badgeHTML,
+            achievementHTML) {
   getWikiBadges('/Webmakers/SampleBadges', function(badges) {
     wiki = badges;
     $("#wiki-badges").show();
@@ -88,6 +83,11 @@ require([
   });
   $("#mark-all-as-read").click(function() {
     badger.markAllBadgesRead();
+  });
+  badger.on('award', function(badge) {
+    var div = $(Mustache.render(achievementHTML, badge.badge));
+    div.appendTo("html").hide().slideDown().delay(2000)
+      .slideUp(function() { div.remove(); });
   });
   badger.on('change:badges', function() {
     $("#owned-badges").empty();

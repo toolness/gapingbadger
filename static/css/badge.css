@@ -1,0 +1,15 @@
+ul.badges {
+  list-style-type: none;
+}
+
+.media .img.badge {
+  width: 66px;
+}
+
+div.badge-name a {
+  color: inherit;
+}
+
+div.badge-desc {
+  margin: 10px 0;
+}
