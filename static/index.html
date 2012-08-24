@@ -7,7 +7,14 @@
 <script>
 var badger;
 
-require(["jquery", "gapingbadger"], function($, Gapingbadger) {
+require([
+  "jquery",
+  "gapingbadger",
+  "get-wiki-badges"
+], function($, Gapingbadger, getWikiBadges) {
+  getWikiBadges('/Webmakers/SampleBadges', function(badges) {
+    console.log(badges);
+  });
   badger = Gapingbadger("http://labs.toolness.com:3031");
   badger.on('auth-required', function() {
     require(["https://login.persona.org/include.js"], function() {
