@@ -1,5 +1,5 @@
 define(function(require) {
-  var MicroEvent = require("gb/micro-event"),
+  var MicroEvent = require("micro-event"),
       BrowserIDCORS = require("gb/browserid-cors"),
       Badges = require("gb/badges");
   
