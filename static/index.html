@@ -16,15 +16,17 @@ require([
     console.log(badges);
   });
   badger = Gapingbadger("http://labs.toolness.com:3031");
-  badger.on('auth-required', function() {
-    require(["https://login.persona.org/include.js"], function() {
-      $("#login").show().click(function() {
-        navigator.id.get(badger.authenticate);
+  badger.checkLogin({
+    success: function() {
+      $("#login").hide();
+    },
+    authenticate: function(next) {
+      require(["https://login.persona.org/include.js"], function() {
+        $("#login").show().click(function() {
+          navigator.id.get(next);
+        });
       });
-    });
-  });
-  badger.on('authenticate', function() {
-    console.log("AUTHENTICATED!", badger.email);
+    }
   });
   badger.on('fetch', function() {
     console.log('fetch');

@@ -1,7 +1,8 @@
 define(function(require) {
   var MicroEvent = require("micro-event"),
       BrowserIDCORS = require("gb/browserid-cors"),
-      Badges = require("gb/badges");
+      Badges = require("gb/badges"),
+      checkLogin = require("gb/check-login");
   
   return function Gapingbadger(options) {
     if (typeof(options) == "string")
@@ -29,12 +30,8 @@ define(function(require) {
     
     self.fetch = function() {
       badges.getBadgesRead(function(err, badgesRead) {
-        if (err) {
-          if (err.status == 403) {
-            return self.trigger('auth-required');
-          } else
-            return self.trigger('error', 'getBadgesRead() -> ' + err.status);
-        }
+        if (err)
+          return self.trigger('error', 'getBadgesRead() -> ' + err.status);
         self.badgesRead = badgesRead;
         badges.fetch(function(err, badgeList) {
           if (err)
@@ -48,18 +45,21 @@ define(function(require) {
     
     self.logout = bic.logout;
 
-    self.authenticate = function(assertion) {
-      if (!assertion)
-        return;
-      bic.processAssertion(assertion, function(err, info) {
-        if (err)
-          return self.trigger('error', 'error authenticating: ' + req.status);
-        self.email = info.email;
-        self.trigger('authenticate');
-        self.fetch();
+    self.checkLogin = function(options) {
+      checkLogin({
+        browserIDCORS: bic,
+        authenticate: options.authenticate,
+        success: function() {
+          self.email = bic.getLoginInfo().email;
+          self.trigger('authenticate');
+          options.success();
+        },
+        error: function(req) {
+          self.trigger('error', 'error authenticating: ' + req.status);
+        }
       });
     };
-
+    
     self.award = function(badgeAssertion, cb) {
       badges.award(badgeAssertion, function(err, badge) {
         if (err) {
