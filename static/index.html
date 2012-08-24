@@ -59,6 +59,7 @@ require([
       var badge = badges[name];
       var li = $(Mustache.render(badgeHTML, badge));
       var button = $('<button>Award this badge</button>');
+      button.addClass("logged-in");
       button.click(function() { badger.award(badge); });
       $('.actions', li).append(button);
       $("#wiki-badges ul").append(li);
