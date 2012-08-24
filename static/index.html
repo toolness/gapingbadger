@@ -24,10 +24,13 @@ html:not(.logged-in) .logged-in {
 <button id="login" class="logged-out">Login</button>
 <button id="logout" class="logged-in">Logout</button>
 <div class="logged-in">
-  <p>Unread badges: <span class="unread-badges">0</span>
+  <p>Unread badges: <span class="unread-badges"></span>
     <button id="mark-all-as-read">Mark all as read</button></p>
-  <h2>Badges for <span class="email"></span></h2>
-  <ul class="badges" id="owned-badges"></ul>
+  <div id="owned-badges">
+    <h2>Badges for <span class="email"></span></h2>
+    <ul class="badges"></ul>
+    <button id="push-to-backpack">Push to backpack</button>
+  </div>
 </div>
 <div id="wiki-badges" style="display: none">
   <h2>Available Badges</h2>
@@ -84,24 +87,31 @@ require([
   $("#mark-all-as-read").click(function() {
     badger.markAllBadgesRead();
   });
+  $("#push-to-backpack").click(function() {
+    require(["http://beta.openbadges.org/issuer.js"], function() {
+      OpenBadges.issue(badger.getAssertionURLs());
+    });
+  });
   badger.on('award', function(badge) {
     var div = $(Mustache.render(achievementHTML, badge.badge));
     div.appendTo("html").hide().slideDown().delay(2000)
       .slideUp(function() { div.remove(); });
   });
   badger.on('change:badges', function() {
-    $("#owned-badges").empty();
+    $("#owned-badges ul").empty();
+    $("#owned-badges").toggle(!!badger.badges.length);
     badger.badges.forEach(function(badge) {
       var li = $(Mustache.render(badgeHTML, badge.badge));
       var button = $('<button>Remove</button>');
       button.click(function() { badger.disown(badge); });
       $('.actions', li).append(button);
-      li.appendTo("#owned-badges");
+      li.appendTo("#owned-badges ul");
     });
   });
   badger.on('change:unreadBadges', function() {
     $(".unread-badges").text(badger.unreadBadges.toString());
-    console.log('unreadBadges changed!');
   });
+  badger.trigger('change:badges');
+  badger.trigger('change:unreadBadges');
 });
 </script>

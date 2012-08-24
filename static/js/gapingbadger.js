@@ -28,7 +28,6 @@ define(function(require) {
     function updateUnreadBadges() {
       var count = 0;
       for (var i = 0; i < self.badges.length; i++) {
-        console.log('COMPARE', self.badges[i].id, badgesRead);
         if (self.badges[i].id > badgesRead)
           count++;
       }
@@ -42,6 +41,14 @@ define(function(require) {
       updateUnreadBadges();
       self.triggerChange('badges');
     }
+    
+    self.getAssertionURLs = function(badgeList) {
+      if (!badgeList)
+        badgeList = self.badges;
+      return badgeList.map(function(badge) {
+        return self.baseURL + "/badges/" + badge.id;
+      });
+    };
     
     self.markAllBadgesRead = function() {
       var maxId = 0;
