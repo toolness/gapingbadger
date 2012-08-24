@@ -8,9 +8,7 @@
 var badger;
 
 require(["jquery", "gapingbadger"], function($, Gapingbadger) {
-  badger = Gapingbadger({
-    baseURL: "http://labs.toolness.com:3031"
-  });
+  badger = Gapingbadger("http://labs.toolness.com:3031");
   badger.on('auth-required', function() {
     require(["https://login.persona.org/include.js"], function() {
       $("#login").show().click(function() {

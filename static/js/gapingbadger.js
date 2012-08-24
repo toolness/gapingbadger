@@ -4,6 +4,9 @@ define(function(require) {
       Badges = require("gb/badges");
   
   return function Gapingbadger(options) {
+    if (typeof(options) == "string")
+      options = {baseURL: options};
+    
     var bic = BrowserIDCORS({
       baseURL: options.baseURL,
       cacheKey: 'gapingbadger_' + options.baseURL
