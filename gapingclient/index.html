@@ -39,6 +39,8 @@ html:not(.logged-in) .logged-in {
 <script src="js/require-config.js"></script>
 <script src="js/require.min.js"></script>
 <script>
+/* These globals are only exposed for debugging from the console. */
+
 var badger;
 var wiki;
 
@@ -51,6 +53,8 @@ require([
   "text!templates/achievement.html"
 ], function($, Gapingbadger, getWikiBadges, Mustache, badgeHTML,
             achievementHTML) {
+  /* Scrape available badges from the Mozilla wiki. */
+  
   getWikiBadges('/Webmakers/SampleBadges', function(badges) {
     wiki = badges;
     $("#wiki-badges").show();
@@ -64,7 +68,11 @@ require([
       $("#wiki-badges ul").append(li);
     });
   });
+  
   badger = Gapingbadger("http://labs.toolness.com:3031");
+  
+  /* Manage BrowserID-based authentication semantics. */
+  
   badger.checkLogin({
     success: function() {
       $("html").removeClass("logged-out").addClass("logged-in");
@@ -80,6 +88,9 @@ require([
       });
     }
   });
+  
+  /* Bind buttons. */
+
   $("#logout").click(function() {
     badger.logout();
     window.location.reload();
@@ -92,12 +103,21 @@ require([
       OpenBadges.issue(badger.getAssertionURLs());
     });
   });
+  
+  /* Observe badger events and react to them. */
+  
   badger.on('award', function(badge) {
+    /* The user has just been awarded a badge! Show a
+     * Steam-like achievement popup. */
+     
     var div = $(Mustache.render(achievementHTML, badge.badge));
     div.appendTo("html").hide().slideDown().delay(2000)
       .slideUp(function() { div.remove(); });
   });
   badger.on('change:badges', function() {
+    /* One or more badges have been added or removed from the user's
+     * account. Refresh the list. */
+     
     $("#owned-badges ul").empty();
     $("#owned-badges").toggle(!!badger.badges.length);
     badger.badges.forEach(function(badge) {
@@ -109,8 +129,14 @@ require([
     });
   });
   badger.on('change:unreadBadges', function() {
+    /* The number of badges that the user hasn't "read" yet has
+     * changed, so update the page accordingly. */
+     
     $(".unread-badges").text(badger.unreadBadges.toString());
   });
+  
+  /* Manually trigger badger events to set up the initial page state. */
+
   badger.trigger('change:badges');
   badger.trigger('change:unreadBadges');
 });
