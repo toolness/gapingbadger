@@ -39,6 +39,19 @@ define(function() {
       });
     };
 
+    self.disown = function(badgeAssertion, cb) {
+      network.ajax({
+        type: "DELETE",
+        url: "/badges/" + badgeAssertion.id,
+        success: function() {
+          cb(null);
+        },
+        error: function(req) {
+          cb(req);
+        },
+      });
+    };
+    
     self.award = function(badgeAssertion, cb) {
       network.ajax({
         type: "POST",
@@ -46,6 +59,8 @@ define(function() {
         contentType: 'application/json',
         data: JSON.stringify(badgeAssertion),
         success: function(data) {
+          if (typeof(data) == 'string')
+            data = JSON.parse(data);
           cb(null, data);
         },
         error: function(req) {

@@ -2,6 +2,7 @@ var require = {
   baseUrl: "js",
   paths: {
     jquery: "jquery.min",
+    templates: "../templates"
   }
 };
 

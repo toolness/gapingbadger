@@ -1,37 +1,105 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Gapingbadger Client</title>
-<button id="login" style="display: none">Login</button>
+<style>
+html:not(.logged-out) .logged-out {
+  display: none;
+}
+
+html:not(.logged-in) .logged-in {
+  display: none;
+}
+
+ul.badges {
+  list-style-type: none;
+}
+
+/* ====== media ====== 
+ * From http://www.stubbornella.org/?p=497 */
+
+.media {margin:10px;}
+.media, .bd {overflow:hidden; _overflow:visible; zoom:1;}
+.media .img {float:left; margin-right: 10px;}
+.media .img img{display:block;}
+.media .imgExt{float:right; margin-left: 10px;}
+
+.media .img.badge {
+  width: 66px;
+}
+</style>
+<button id="login" class="logged-out">Login</button>
+<button id="logout" class="logged-in">Logout</button>
+<div class="logged-in">
+  <p>Unread badges: <span class="unread-badges">0</span>
+    <button id="mark-all-as-read">Mark all as read</button></p>
+  <h2>Badges for <span class="email"></span></h2>
+  <ul class="badges" id="owned-badges"></ul>
+</div>
+<div id="wiki-badges" style="display: none">
+  <h2>Available Badges</h2>
+  <ul class="badges"></ul>
+</div>
 <script src="js/require-config.js"></script>
 <script src="js/require.min.js"></script>
 <script>
 var badger;
+var wiki;
 
 require([
   "jquery",
   "gapingbadger",
-  "get-wiki-badges"
-], function($, Gapingbadger, getWikiBadges) {
-  var wikiBadges = getWikiBadges('/Webmakers/SampleBadges');
+  "get-wiki-badges",
+  "Mustache",
+  "text!templates/badge.html"
+], function($, Gapingbadger, getWikiBadges, Mustache, badgeHTML) {
+  getWikiBadges('/Webmakers/SampleBadges', function(badges) {
+    wiki = badges;
+    $("#wiki-badges").show();
+    Object.keys(badges).forEach(function(name) {
+      var badge = badges[name];
+      var li = $(Mustache.render(badgeHTML, badge));
+      var button = $('<button>Award this badge</button>');
+      button.click(function() { badger.award(badge); });
+      $('.actions', li).append(button);
+      $("#wiki-badges ul").append(li);
+    });
+  });
   badger = Gapingbadger("http://labs.toolness.com:3031");
   badger.checkLogin({
     success: function() {
-      $("#login").hide();
+      $("html").removeClass("logged-out").addClass("logged-in");
+      $(".email").text(badger.email);
       badger.fetch();
     },
     authenticate: function(next) {
       require(["https://login.persona.org/include.js"], function() {
-        $("#login").show().click(function() {
+        $("html").addClass("logged-out");
+        $("#login").unbind().click(function() {
           navigator.id.get(next);
         });
       });
     }
   });
-  badger.on('fetch', function() {
-    wikiBadges.done(function(badges) {
-      console.log(badges);
+  $("#logout").click(function() {
+    badger.logout();
+    window.location.reload();
+  });
+  $("#mark-all-as-read").click(function() {
+    badger.markAllBadgesRead();
+  });
+  badger.on('change:badges', function() {
+    $("#owned-badges").empty();
+    badger.badges.forEach(function(badge) {
+      var li = $(Mustache.render(badgeHTML, badge.badge));
+      var button = $('<button>Remove</button>');
+      button.click(function() { badger.disown(badge); });
+      $('.actions', li).append(button);
+      li.appendTo("#owned-badges");
     });
-    console.log('fetch');
+  });
+  badger.on('change:unreadBadges', function() {
+    $(".unread-badges").text(badger.unreadBadges.toString());
+    console.log('unreadBadges changed!');
   });
 });
 </script>
