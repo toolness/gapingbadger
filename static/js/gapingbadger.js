@@ -1,12 +1,14 @@
 define(function(require) {
   var MicroEvent = require("gb/micro-event"),
-      BrowserIDCORS = require("gb/browserid-cors");
+      BrowserIDCORS = require("gb/browserid-cors"),
+      Badges = require("gb/badges");
   
   return function Gapingbadger(options) {
     var bic = BrowserIDCORS({
       baseURL: options.baseURL,
       cacheKey: 'gapingbadger_' + options.baseURL
     });
+    var badges = Badges(bic);
     var self = {
       baseURL: options.baseURL,
       email: null,
@@ -19,43 +21,27 @@ define(function(require) {
 
     self.updateBadgesRead = function() {
       self.badgesRead = self.badges.length;
-      bic.ajax({
-        type: 'PUT',
-        url: "/blob",
-        contentType: 'application/json',
-        data: JSON.stringify({badgesRead: self.badgesRead})
-      });
+      badges.setBadgesRead(self.badgesRead);
     };
     
     self.fetch = function() {
-      bic.ajax({
-        url: "/blob",
-        success: function(data) {
-          if (typeof(data) == "string")
-            data = JSON.parse(data);
-          self.badgesRead = data.badgesRead || 0;
-          bic.ajax({
-            url: "/badges",
-            success: function(data) {
-              if (typeof(data) == "string")
-                data = JSON.parse(data);
-              self.badges = data;
-              self.trigger('fetch', self.badges);
-            },
-            error: function(req) {
-              self.trigger('error', 'error while fetching badges: ' +
-                           req.status);
-            }
-          });
-        },
-        error: function(req) {
-          if (req.status == 403) {
-            self.trigger('auth-required');
+      badges.getBadgesRead(function(err, badgesRead) {
+        if (err) {
+          if (err.status == 403) {
+            return self.trigger('auth-required');
           } else
-            self.trigger('error', 'error while fetching blob: ' + req.status);
+            return self.trigger('error', 'getBadgesRead() -> ' + err.status);
         }
+        self.badgesRead = badgesRead;
+        badges.fetch(function(err, badgeList) {
+          if (err)
+            return self.trigger('error', 'error while fetching badges: ' +
+                                req.status);
+          self.badges = badgeList;
+          self.trigger('fetch', self.badges);
+        });
       });
-    };
+    }
     
     self.logout = bic.logout;
 
@@ -72,22 +58,17 @@ define(function(require) {
     };
 
     self.award = function(badgeAssertion, cb) {
-      bic.ajax({
-        type: "POST",
-        url: "/badges",
-        contentType: 'application/json',
-        data: JSON.stringify(badgeAssertion),
-        success: function(data) {
-          self.badges.push(data);
-          self.trigger('award', data);
-          if (cb)
-            cb(null, data);
-        },
-        error: function(req) {
+      badges.award(badgeAssertion, function(err, badge) {
+        if (err) {
           self.trigger('error', 'error awarding badge: ' + req.status);
           if (cb)
             cb(req);
+          return;
         }
+        self.badges.push(badge);
+        self.trigger('award', badge);
+        if (cb)
+          cb(null, badge);
       });
     };
     
