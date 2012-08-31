@@ -128,8 +128,28 @@ define(function(require) {
       });
     };
     
+    self.has = function(badgeAssertion) {
+      if (!badgeAssertion.badge)
+        /* We were passed a badge 'class' instead of a badge 'instance',
+         * so we'll 'instantiate' it. */
+        badgeAssertion = {badge: badgeAssertion};
+      for (var i = 0; i < self.badges.length; i++)
+        if (self.badges[i].badge.criteria == badgeAssertion.badge.criteria)
+          return true;
+      return false;
+    };
+
+    self.awardUnique = function(badgeAssertion, cb) {
+      cb = cb || nullCb;
+      if (self.has(badgeAssertion))
+        return cb(null, null);
+      return self.award(badgeAssertion, cb);
+    };
+
     self.award = function(badgeAssertion, cb) {
       if (!badgeAssertion.badge)
+        /* We were passed a badge 'class' instead of a badge 'instance',
+         * so we'll 'instantiate' it. */
         badgeAssertion = {badge: badgeAssertion};
       if (!badgeAssertion.badge.version)
         badgeAssertion.badge.version = "0.5.0";
