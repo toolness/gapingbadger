@@ -1,8 +1,8 @@
 define(function(require) {
   var BackboneEvents = require("backbone-events"),
-      BrowserIDCORS = require("gb/browserid-cors"),
-      Badges = require("gb/badges"),
-      checkLogin = require("gb/check-login"),
+      BrowserIDCORS = require("./gb/browserid-cors"),
+      Badges = require("./gb/badges"),
+      checkLogin = require("./gb/check-login"),
       nullCb = function() {};
   
   return function Gapingbadger(options) {
