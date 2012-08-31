@@ -59,17 +59,22 @@ define(function(require) {
       updateUnreadBadges();
     };
     
-    self.fetch = function() {
+    self.fetch = function(cb) {
+      function error(msg, req) {
+        self.trigger('error', msg + ' - status: ' + req.status);
+        cb(req);
+      }
+      
+      cb = cb || nullCb;
       badges.getBadgesRead(function(err, maxId) {
         if (err)
-          return self.trigger('error', 'getBadgesRead() -> ' + err.status);
+          return error('badges.getBadgesRead() failed', err);
         badgesRead = maxId;
         updateUnreadBadges();
         badges.fetch(function(err, badgeList) {
           var badgesChanged = false;
           if (err)
-            return self.trigger('error', 'error while fetching badges: ' +
-                                req.status);
+            return error('badges.fetch() failed', err);
           if (badgeList.length == self.badges.length) {
             for (var i = 0; i < badgeList.length; i++)
               if (badgeList[i].id != self.badges[i].id) {
@@ -80,8 +85,9 @@ define(function(require) {
             badgesChanged = true;
           if (badgesChanged) {
             self.badges = badgeList;
-            onBadgesChanged();
+            setTimeout(onBadgesChanged, 0);
           }
+          cb(null, self.badges);
         });
       });
     }

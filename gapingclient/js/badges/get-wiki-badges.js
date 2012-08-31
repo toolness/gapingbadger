@@ -29,7 +29,7 @@ define(["jquery"], function($) {
           criteria: criteriaURL
         };
       });
-      deferred.resolve(badges);
+      setTimeout(function() { deferred.resolve(badges); }, 0);
       if (cb)
         cb(badges);
     });
