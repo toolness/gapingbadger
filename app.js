@@ -10,7 +10,7 @@ var DATA_DIR = __dirname + '/data',
     USERS_DIR = DATA_DIR + '/users',
     BLOBS_DIR = DATA_DIR + '/blobs',
     SESSIONS_DIR = DATA_DIR + '/sessions',
-    PORT = 3031;
+    PORT = process.env['PORT'] || 3031;
 
 [DATA_DIR, ASSERTIONS_DIR, USERS_DIR, BLOBS_DIR,
  SESSIONS_DIR].forEach(function(dirname) {
