@@ -27,6 +27,9 @@ html:not(.logged-in) .logged-in {
 <div class="logged-in">
   <p>Unread badges: <span class="unread-badges"></span>
     <button id="mark-all-as-read">Mark all as read</button></p>
+  <h2>Behaviors</h2>
+  <pre id="behaviors"></pre>
+  <button id="reset-behaviors">Reset behaviors</button>
   <div id="owned-badges">
     <h2>Badges for <span class="email"></span></h2>
     <ul class="badges"></ul>
@@ -96,6 +99,9 @@ require([
     badger.logout();
     window.location.reload();
   });
+  $("#reset-behaviors").click(function() {
+    badger.resetBehaviors();
+  });
   $("#mark-all-as-read").click(function() {
     badger.markAllBadgesRead();
   });
@@ -106,7 +112,7 @@ require([
   });
   
   /* Observe badger events and react to them. */
-  
+
   badger.on('award', function(badge) {
     /* The user has just been awarded a badge! Show a
      * Steam-like achievement popup. */
@@ -114,6 +120,9 @@ require([
     var div = $(Mustache.render(achievementHTML, badge.badge));
     div.appendTo("html").hide().slideDown().delay(2000)
       .slideUp(function() { div.remove(); });
+  });
+  badger.on('change:behaviors', function() {
+    $("#behaviors").text(JSON.stringify(badger.behaviors, null, 2));
   });
   badger.on('change:badges', function() {
     /* One or more badges have been added or removed from the user's
@@ -140,5 +149,6 @@ require([
 
   badger.trigger('change:badges');
   badger.trigger('change:unreadBadges');
+  badger.trigger('change:behaviors');
 });
 </script>
