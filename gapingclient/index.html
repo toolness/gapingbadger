@@ -19,6 +19,14 @@ html:not(.logged-out) .logged-out {
 html:not(.logged-in) .logged-in {
   display: none;
 }
+
+dd:before {
+  content: 'The user has done this ';
+}
+
+dd:after {
+  content: ' time(s).';
+}
 </style>
 <a href="https://github.com/toolness/gapingbadger"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 <h1>Gapingbadger Client</h1>
@@ -28,7 +36,7 @@ html:not(.logged-in) .logged-in {
   <p>Unread badges: <span class="unread-badges"></span>
     <button id="mark-all-as-read">Mark all as read</button></p>
   <h2>Behaviors</h2>
-  <pre id="behaviors"></pre>
+  <dl id="behaviors"></dl>
   <button id="reset-behaviors">Reset behaviors</button>
   <div id="owned-badges">
     <h2>Badges for <span class="email"></span></h2>
@@ -122,7 +130,11 @@ require([
       .slideUp(function() { div.remove(); });
   });
   badger.on('change:behaviors', function() {
-    $("#behaviors").text(JSON.stringify(badger.behaviors, null, 2));
+    $("#behaviors").empty();
+    Object.keys(badger.behaviors).forEach(function(key) {
+      $('<dt></dt>').text(key).appendTo("#behaviors");
+      $('<dd></dd>').text(badger.behaviors[key]).appendTo("#behaviors");
+    });
   });
   badger.on('change:badges', function() {
     /* One or more badges have been added or removed from the user's
